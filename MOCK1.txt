@@ -1,0 +1,134 @@
+
+1A
+-- Usando los alias adecuados, obtener el nombre y nacionalidad de los autores que han escrito algún libro y
+-- que NO sean de nacionalidad “Española”.
+
+select distinct a.nombre, a.nacionalidad
+from autor A, escribir E, obra O, esta_en EE, libro L
+where a.autor_id=e.autor_id AND e.cod_ob=o.cod_ob AND ee.cod_ob=o.cod_ob AND ee.id_lib=l.id_lib AND nacionalidad not like 'Española'
+
+1B
+
+select distinct a.nombre, a.nacionalidad as Nacionalidad
+from autor A join escribir E on a.autor_id=e.autor_id,
+ join obra O on e.cod_ob=o.cod_ob,
+obra O join esta_en EE on o.cod_ob=ee.cod_ob,
+esta_en EE join libro L on ee.id_lib=l.id_lib
+where 
+a.nacionalidad IS NOT null AND (a.nacionalidad <>'Española'  OR a.nombre like 'A%' OR a.nombre like 'E%' OR a.nombre like 'I%' OR a.nombre like 'O%' OR a.nombre like 'U%')
+  ME  FALTÓ SABER CONCATENAR LOS JOINS
+
+2A
+select  a.nombre as 'Nombre Autor', count(l.id_lib) as 'Numero de libros escritos'
+from autor A, escribir E, obra O, esta_en EE, libro L
+where a.autor_id=e.autor_id AND e.cod_ob=o.cod_ob AND ee.cod_ob=o.cod_ob AND ee.id_lib=l.id_lib 
+group by a.nombre
+having count(l.ID_LIB)>10
+
+2B
+
+SELECT 
+    a.nombre AS 'Nombre Autor',
+    COUNT(l.id_lib) AS 'Numero de libros escritos'
+FROM
+    autor A
+        INNER JOIN
+    escribir E ON a.autor_id = e.autor_id
+        INNER JOIN
+    obra O ON e.cod_ob = o.cod_ob
+        INNER JOIN
+    esta_en EE ON ee.cod_ob = o.cod_ob
+        INNER JOIN
+    libro L ON ee.id_lib = l.id_lib
+WHERE
+    a.nacionalidad = 'Española'
+GROUP BY a.nombre
+HAVING COUNT(l.ID_LIB) > 10
+order by 2 desc                              ¿COMO QUE LOS QUE MAS SE HAN VENDIDO A QUE SE REFIERE?
+
+
+3A
+
+select o.cod_ob as 'Codigo obra', count(ee.id_lib) as 'Numero de libros'
+from obra O left join esta_en EE
+on o.cod_ob=ee.cod_ob
+group by o.cod_ob
+
+
+3B Me ha costado un poco
+
+select o.cod_ob as 'Codigo obra', count(ee.id_lib) as 'Numero de libros'
+from obra O , esta_en EE
+where o.cod_ob=ee.cod_ob
+group by o.cod_ob
+
+UNION
+
+select o.cod_ob as 'Codigo obra', null
+from obra O
+where not exists (select 1 from esta_en EE where o.cod_ob=ee.cod_ob)
+order by 1
+
+
+4A Nose si está bien
+
+SELECT 
+    am.nombre as Nombre_Amigo, COUNT(e.autor_id) as 'Autores distintos'
+FROM
+    amigo AM,
+    prestamo P,
+    libro L,
+    esta_en EE,
+    obra O,
+    escribir E
+WHERE
+    am.num = p.num AND l.id_lib = p.id_lib
+        AND ee.id_lib = l.id_lib
+        AND ee.cod_ob = o.cod_ob
+        AND o.cod_ob = e.cod_ob
+GROUP BY am.nombre
+
+
+4B
+SELECT 
+    am.nombre as Nombre_Amigo, COUNT(e.autor_id) as 'Autores distintos'
+FROM
+    amigo AM,
+    prestamo P,
+    libro L,
+    esta_en EE,
+    obra O,
+    escribir E
+WHERE
+    am.num = p.num AND l.id_lib = p.id_lib
+        AND ee.id_lib = l.id_lib
+        AND ee.cod_ob = o.cod_ob
+        AND o.cod_ob = e.cod_ob
+GROUP BY am.nombre
+order by 2,1
+
+5A
+create view  ejercicio5A as (
+select distinct l.id_lib, l.titulo as 'Titulo libro', count(ee.cod_ob) as 'Libros que estan en obras'
+from libro L , esta_en EE 
+where l.titulo is not null AND  l.id_lib=ee.id_lib 
+group by l.id_lib, l.titulo)
+
+
+5B LA SOLUCION ES ASI
+
+create view  ejercicio5AAAA as (
+select  l.id_lib, l.titulo , count(ee.cod_ob) as contador
+from libro L , esta_en EE 
+where l.titulo is not null AND  l.id_lib=ee.id_lib 
+group by l.id_lib, l.titulo)
+
+
+select  id_lib, titulo ,  contador
+from ejercicio5aaaa
+where contador= (select max(contador) from ejercicio5aaaa)
+
+
+
+
+
