@@ -1,0 +1,146 @@
+
+1A
+SELECT DISTINCT
+    a.nombre AS Nombre_Autor, a.nacionalidad AS Nacionalidad
+FROM
+    autor A,
+    escribir E
+WHERE
+    a.nacionalidad NOT LIKE 'Española'
+        AND a.autor_id = e.autor_id
+
+
+1B
+SELECT DISTINCT
+    a.nombre AS Nombre_Autor, CONCAT('Nacionalidad ',a.nacionalidad) AS Nacionalidad
+FROM
+    autor A inner join
+    escribir E on a.autor_id=e.autor_id
+WHERE
+    (a.nacionalidad NOT LIKE 'Española'
+        OR a.nombre LIKE 'A%'
+        OR a.nombre LIKE 'E%'
+        OR a.nombre LIKE 'I%'
+        OR a.nombre LIKE 'O%'
+        OR a.nombre LIKE 'U%')
+        AND a.nacionalidad IS NOT NULL
+
+2A
+SELECT 
+    a.nombre AS 'Nombre Autor',
+    COUNT(e.cod_ob) AS 'Libros escritos'
+FROM
+    autor A,
+    escribir E
+WHERE
+    a.autor_id = e.autor_id
+GROUP BY a.nombre
+HAVING COUNT(e.cod_ob) > 10
+
+
+2B
+SELECT 
+    a.nombre AS 'Nombre Autor',
+    COUNT(e.cod_ob) AS 'Libros escritos'
+FROM
+    autor A
+        INNER JOIN
+    escribir E ON a.autor_id = e.autor_id
+WHERE
+    a.nacionalidad = 'Española'
+GROUP BY a.nombre
+HAVING COUNT(e.cod_ob) > 10
+ORDER BY 2 DESC
+
+3A
+SELECT 
+    o.cod_ob AS 'Codigo Obra',
+    COUNT(ee.id_lib) AS 'Libros que tiene'
+FROM
+    obra O
+        LEFT JOIN
+    esta_en EE ON o.cod_ob = ee.cod_ob
+GROUP BY o.cod_ob
+
+3B
+SELECT 
+    o.cod_ob AS 'Codigo Obra',
+    COUNT(ee.id_lib) AS 'Libros que tiene'
+FROM
+    obra O,
+    esta_en EE
+WHERE
+    o.cod_ob = ee.cod_ob
+GROUP BY o.cod_ob 
+UNION SELECT 
+    NULL, COUNT(ee2.id_lib) AS 'Libros que tiene'
+FROM
+    esta_EN EE2
+WHERE
+    NOT EXISTS( SELECT 
+            1
+        FROM
+            esta_en EE)
+ORDER BY 2
+
+4A
+SELECT 
+    aa.nombre AS Amigo, COUNT(e.autor_id)
+FROM
+    amigo AA,
+    prestamo P,
+    libro L,
+    esta_en EE,
+    obra O,
+    escribir E
+WHERE
+    aa.num = p.num AND p.id_lib = l.id_lib
+        AND l.id_lib = ee.id_lib
+        AND ee.cod_ob = o.cod_ob
+        AND e.cod_ob = o.cod_ob
+GROUP BY aa.nombre
+
+4B
+SELECT 
+    aa.nombre AS Amigo, COUNT(e.autor_id) as 'Autores Diferentes'
+FROM
+    amigo AA,
+    prestamo P,
+    libro L,
+    esta_en EE,
+    obra O,
+    escribir E
+WHERE
+    aa.num = p.num AND p.id_lib = l.id_lib
+        AND l.id_lib = ee.id_lib
+        AND ee.cod_ob = o.cod_ob
+        AND e.cod_ob = o.cod_ob
+GROUP BY aa.nombre
+order by 2 DESC,1
+
+5A
+CREATE VIEW ejercicio5a AS
+    (SELECT 
+        l.id_lib AS ID_LIB,
+        l.titulo AS Titulo,
+        COUNT(ee.cod_ob) AS Contador
+    FROM
+        libro L,
+        esta_en EE
+    WHERE
+        l.id_lib = ee.id_lib
+            AND l.titulo IS NOT NULL
+    GROUP BY l.id_lib , l.titulo)
+
+5B
+SELECT 
+    ejercicio5a.id_lib AS ID_LIB,
+    ejercicio5a.titulo AS Titulo,
+    Contador //Si aqui pongo el count(ee.cod_ob) no funciona
+FROM
+    ejercicio5a
+WHERE
+    Contador // //Si aqui pongo el count(ee.cod_ob) no funciona = (SELECT 
+            max(contador)
+        FROM
+            ejercicio5a)
