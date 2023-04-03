@@ -1,0 +1,83 @@
+-- DROP DATABASE biblioteca;
+-- CREATE DATABASE biblioteca;
+USE biblioteca;
+
+-- 1A 1
+SELECT DISTINCT A.nombre AS AUTHOR, A.nacionalidad AS NATIONALITY
+FROM autor A, escribir E
+WHERE E.autor_id=A.autor_id AND (NOT A.nacionalidad LIKE 'Española');
+
+-- 1A 2
+SELECT DISTINCT A.nombre AS AUTHOR, CONCAT("Nacionalidad ", A.nacionalidad) AS NATIONALITY
+FROM autor A INNER JOIN escribir E
+ON E.autor_id=A.autor_id 
+WHERE NOT IS NULL A.nacionalidad AND (A.nacionalidad<>'Española' OR A.nombre LIKE 'A%' OR A.nombre LIKE 'E%' OR A.nombre LIKE 'I%' OR A.nombre LIKE 'O%' OR A.nombre LIKE 'U%');
+
+
+
+-- 2A 1
+SELECT A.nombre AS AUTHOR, COUNT(*) AS BOOKS
+FROM autor A,escribir E
+WHERE E.autor_id=A.autor_id 
+GROUP BY A.autor_id
+HAVING COUNT(*) >10;
+
+-- 2A 2
+SELECT A.nombre AS AUTHOR, COUNT(*) AS BOOKS
+FROM autor A INNER JOIN escribir E
+ON E.autor_id=A.autor_id 
+WHERE A.nacionalidad='Española'
+GROUP BY A.autor_id
+HAVING COUNT(*) >10
+ORDER BY 2 DESC;
+
+
+-- 3A 1
+-- INSERT INTO OBRA VALUES (0,'DQL EXPRESS', NULL);
+SELECT O.TITULO AS COLLECTION, COUNT(EE.COD_OB) AS NUMBER_OF_BOOKS
+FROM esta_en EE RIGHT JOIN obra O
+ON O.COD_OB= EE.COD_OB AND EE.COD_OB =O.COD_OB 
+GROUP BY O.COD_OB;
+
+-- 3A 2
+SELECT O.TITULO AS COLLECTION, COUNT(EE.COD_OB) AS NUMBER_OF_BOOKS
+FROM esta_en EE INNER JOIN obra O
+ON O.COD_OB= EE.COD_OB AND EE.COD_OB =O.COD_OB 
+GROUP BY O.COD_OB
+UNION
+SELECT O.TITULO AS COLLECTION, 0 AS NUMBER_OF_BOOKS
+FROM obra O
+WHERE O.COD_OB NOT IN (SELECT COD_OB FROM esta_en)
+ORDER BY 2;
+
+-- 4A 1
+SELECT AM.nombre AS FRIEND, count(*) AS AUTHORS
+FROM amigo AM, prestamo P, esta_en EE, escribir E, autor AU
+WHERE AM.num=P.num AND P.id_lib=EE.id_lib AND EE.cod_ob=E.cod_ob AND E.autor_id=AU.autor_id
+GROUP BY 1;
+
+-- 4A 2
+SELECT AM.nombre AS FRIEND, count(*) AS AUTHORS
+FROM amigo AM, prestamo P, esta_en EE, escribir E, autor AU
+WHERE AM.num=P.num AND P.id_lib=EE.id_lib AND EE.cod_ob=E.cod_ob AND E.autor_id=AU.autor_id
+GROUP BY 1
+ORDER BY 2 DESC, 1;
+
+
+-- 5A 1
+DROP VIEW IF EXISTS VI_NUM_BOOKS;
+CREATE VIEW VI_NUM_BOOKS AS
+SELECT L.ID_LIB AS COD_BOOK, L.titulo AS TITLE, COUNT(*) AS COLLECTIONS
+FROM libro L, esta_en EE
+WHERE L.ID_LIB=EE.ID_LIB AND L.titulo is NOT NULL 
+GROUP BY L.ID_LIB, L.titulo;
+
+SELECT * FROM VI_NUM_BOOKS;
+
+-- 5A 2
+SELECT V1.COD_BOOK, V1.TITLE, V1.COLLECTIONS
+FROM VI_NUM_BOOKS V1
+WHERE V1.COLLECTIONS =
+( SELECT MAX(V2.COLLECTIONS)
+FROM VI_NUM_BOOKS V2
+)

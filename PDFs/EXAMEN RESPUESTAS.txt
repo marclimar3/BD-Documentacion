@@ -1,0 +1,35 @@
+--  1A 1
+-- Using the appropriate aliases, we want to know the maximum wage that exists in each hospital. Show the name of the hospital and the maximum salary.
+SELECT h.nombre AS HOSPITAL, MAX(salario) AS MAX_SALARY
+FROM plantilla p, hospital AS h 
+WHERE h.hospital_cod = p.hospital_cod
+GROUP BY h.nombre;
+
+
+--  1A 2
+-- Using the appropriate aliases, we want to know the maximum wage that exists in each room of each hospital. Show the name of the hospital, the name of the room and the maximum salary.
+SELECT h.nombre AS HOSPITAL, s.nombre AS ROOM, CONCAT(MAX(salario), ' EUROS') AS MAX_SALARY
+FROM sala AS s INNER JOIN plantilla p INNER JOIN hospital AS h 
+ON h.hospital_cod = p.hospital_cod
+WHERE p.sala_cod = s.sala_cod  
+GROUP BY h.nombre, s.nombre;
+
+
+--  2A 1
+-- Using the appropriate aliases, we want to retrieve the number (employee_no) and surname of people who are paid more than the average for their hospital. 
+SELECT p.apellido AS SURNAME, p.empleado_no AS NumEMPLOYEE
+FROM plantilla p
+WHERE p.salario > (SELECT AVG(p2.salario)
+FROM plantilla p2
+WHERE p2.hospital_cod = p.hospital_cod);
+
+			 
+--  2A 2
+-- Using the appropriate aliases, we want to retrieve the number (employee_no), surname and salary of people who are less paid at each hospital. Place worst salaries first.
+SELECT p.apellido AS SURNAME, p.empleado_no AS NumEMPLOYEE, p.salario AS SALARY
+FROM plantilla p
+WHERE NOT EXISTS  -- NOT EXISTS AN EMPLOYEE OF THIS HOSPITAL WHO EARNS MORE
+	(SELECT 1
+	FROM plantilla p2
+	WHERE p2.hospital_cod = p.hospital_cod AND p2.salario > p.salario)
+ORDER BY 3;
